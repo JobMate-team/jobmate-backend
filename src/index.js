@@ -1,7 +1,19 @@
 import express from 'express';
+import reviewRouter from "./routers/review.route.js";
+import likeRouter from "./routers/like.route.js";
+import authRouter from "./routers/auth-test.route.js";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 const app = express();
 const port = 3000;
+
+app.use((req, res, next) => {
+  console.log("AUTH HEADER >>>", req.headers.authorization);
+  next();
+});
+
 
 // 요청 로깅
 app.use((req, res, next) => {
@@ -38,6 +50,10 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+app.use("/auth", authRouter);
+
+app.use("/reviews", reviewRouter); 
+app.use("/reviews", likeRouter);
 
 // 서버 시작
 app.listen(port, () => {
