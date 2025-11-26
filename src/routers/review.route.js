@@ -6,13 +6,16 @@ import {
   deleteReviewController,
   getReviewListController
 } from "../controllers/review.controller.js";
+import { authRequired } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/", createReviewController);
+// 로그인 필요
+router.post("/", authRequired,createReviewController);
+router.patch("/:reviewId", authRequired, updateReviewController); 
+router.delete("/:reviewId", authRequired, deleteReviewController);
+// 로그인 필요 X
 router.get("/:reviewId", getReviewController);      
-router.patch("/:reviewId", updateReviewController); 
-router.delete("/:reviewId", deleteReviewController);
 router.get("/", getReviewListController);
 
 export default router;

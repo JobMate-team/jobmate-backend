@@ -1,13 +1,11 @@
 import { toggleReviewLike } from "../services/like.service.js";
-import { getAuthUserId } from "../utils/auth.js";
 
 export const toggleReviewLikeController = async (req, res) => {
   try {
-    const userId = getAuthUserId(req);
+    const userId = req.user_id;          // 미들웨어에서 넣어준 사용자 ID
     const reviewId = req.params.reviewId;
 
     const result = await toggleReviewLike(userId, reviewId);
-
     return res.success(result);
 
   } catch (err) {
@@ -18,4 +16,4 @@ export const toggleReviewLikeController = async (req, res) => {
       reason: err.message
     });
   }
-};
+}
