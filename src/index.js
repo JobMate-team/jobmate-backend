@@ -1,7 +1,12 @@
 import express from 'express';
+//import { pool } from "../db.config.js"
+import dotenv from "dotenv";
+import authRoutes from "./routers/auth.router.js";
 
 const app = express();
 const port = 3000;
+
+dotenv.config();
 
 // 요청 로깅
 app.use((req, res, next) => {
@@ -38,6 +43,9 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+//auth 경로 라우트
+app.use("/auth", authRoutes);
 
 // 서버 시작
 app.listen(port, () => {
