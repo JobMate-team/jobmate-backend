@@ -1,6 +1,25 @@
 import axios from "axios";
+import jwt from "jsonwebtoken";
 import { LoginRequiredError } from "../errors.js";
 import { userRepository } from "../repositories/user.repository.js";
+import { redisClient } from "../config/redis.config.js";
+
+//user.id로 JWT 토큰 생성
+export const generateServiceJWT = (user) => {
+    const accessToken = jwt.sign( //accessToken 생성
+        { id: user.id, type: "access" },
+        process.env.JWT_SECRET,
+        { expiresIn: "30m" }
+    );
+
+    const refreshToken = jwt.sign( //refreshToken 생성
+        { id: user.id, type: "refresh" },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+
+    return { accessToken, refreshToken };
+}
 
 //카카오 로그인 화면 띄우는 URL
 export const buildKakaoLoginURL = () => {
@@ -60,7 +79,6 @@ export const getKakaoUserInfo = async (access_token) => {
     }
 };
 
-
 export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받아온 사용자 정보(JSON)
     const provider = "kakao";
     const kakao_id = String(kakaoUser.id); //id
@@ -70,21 +88,54 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
     let user = await userRepository.findByProviderId(provider, kakao_id);
 
     if (!user) { //기존 user 아니면 DB에 추가
-        const newId = await userRepository.createUser(
-        provider,
-        kakao_id,
-        email,
-        nickname
-        );
-
-        user = {
-        id: newId,
-        provider,
-        kakao_id,
-        email,
-        nickname
-        };
+        const newId = await userRepository.createUser(provider, kakao_id, email, nickname);
+        user = { id: newId, provider, kakao_id, email, nickname };
     }
 
-    return user; //DB에서 찾은 사용자 객체 전달
+    const tokens = generateServiceJWT(user); //tokens.accessToken, tokens.refreshToken
+
+    try{
+        await redisClient.set(`refresh:${user.id}`, tokens.refreshToken, "EX", 60 * 60 * 24 * 7); //Key:user.id, Value:tokens.refreshToken
+    } catch(err) {
+        console.error("Redis 저장 실패:", err.message);
+    }
+
+    return { userId:user.id, tokens };
+};
+
+//refreshToken교체
+export const rotateRefreshToken = async (userId) => {
+    try {
+        const redisKey = `refresh:${userId}`;
+        const currentRefresh = await redisClient.get(redisKey);
+
+        if (!currentRefresh) {
+            throw new Error("No active refresh token in Redis");
+        }
+
+        //새 토큰 발급
+        const newAccessToken = jwt.sign(
+            { id: userId, type: "access" },
+            process.env.JWT_SECRET,
+            { expiresIn: "15m" }
+        );
+
+        const newRefreshToken = jwt.sign(
+            { id: userId, type: "refresh" },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        //Redis에 새 Refresh Token으로 교체
+        await redisClient.set(redisKey, newRefreshToken, "EX", 60 * 60 * 24 * 7);
+
+        return { userId, tokens: { accessToken: newAccessToken, refreshToken: newRefreshToken } };
+    } catch (err) {
+        throw new Error(err.message);
+    }
+};
+
+export const logoutUser = async (userId) => {
+    await redisClient.del(`refresh:${userId}`); //Redis의 refresh key 삭제
+    return userId; //결과 반환(안해도 됨)
 };
