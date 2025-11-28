@@ -4,6 +4,8 @@ import { LoginRequiredError } from "../errors.js";
 import { userRepository } from "../repositories/user.repository.js";
 import { redisClient } from "../config/redis.config.js";
 
+const DEFAULT_JOB_CATEGORY_ID = 2;
+
 //user.id로 JWT 토큰 생성
 export const generateServiceJWT = (user) => {
     const accessToken = jwt.sign( //accessToken 생성
@@ -85,11 +87,13 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
     const email = kakaoUser.kakao_account?.email || null; //이메일
     const nickname = kakaoUser.kakao_account?.profile?.nickname || `kakao_user_${kakaoUser.id}`; //NULL 값일 때 에러 발생
 
+    const job_category_id = DEFAULT_JOB_CATEGORY_ID;
+
     let user = await userRepository.findByProviderId(provider, kakao_id);
 
     if (!user) { //기존 user 아니면 DB에 추가
-        const newId = await userRepository.createUser(provider, kakao_id, email, nickname);
-        user = { id: newId, provider, kakao_id, email, nickname };
+        const newId = await userRepository.createUser(provider, kakao_id, email, nickname, job_category_id);
+        user = await userRepository.findById(newId);
     }
 
     const tokens = generateServiceJWT(user); //tokens.accessToken, tokens.refreshToken
@@ -100,7 +104,17 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
         console.error("Redis 저장 실패:", err.message);
     }
 
-    return { userId:user.id, tokens };
+    return { user, tokens };
+};
+
+//Access Token 만료 시(issue) 발급
+export const issueAccessToken = async (userId) => {
+    const newAccessToken = jwt.sign(
+        { id: userId, type: "access" },
+        process.env.JWT_SECRET,
+        { expiresIn: "15m" }
+    );
+    return newAccessToken;
 };
 
 //refreshToken교체
@@ -113,13 +127,6 @@ export const rotateRefreshToken = async (userId) => {
             throw new Error("No active refresh token in Redis");
         }
 
-        //새 토큰 발급
-        const newAccessToken = jwt.sign(
-            { id: userId, type: "access" },
-            process.env.JWT_SECRET,
-            { expiresIn: "15m" }
-        );
-
         const newRefreshToken = jwt.sign(
             { id: userId, type: "refresh" },
             process.env.JWT_SECRET,
@@ -129,7 +136,7 @@ export const rotateRefreshToken = async (userId) => {
         //Redis에 새 Refresh Token으로 교체
         await redisClient.set(redisKey, newRefreshToken, "EX", 60 * 60 * 24 * 7);
 
-        return { userId, tokens: { accessToken: newAccessToken, refreshToken: newRefreshToken } };
+        return { userId, refreshToken: newRefreshToken };
     } catch (err) {
         throw new Error(err.message);
     }

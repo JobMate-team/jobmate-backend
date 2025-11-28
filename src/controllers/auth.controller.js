@@ -1,4 +1,4 @@
-import { buildKakaoLoginURL, getKakaoToken, getKakaoUserInfo, loginWithKakao, rotateRefreshToken, logoutUser } from "../services/auth.service.js";
+import { buildKakaoLoginURL, getKakaoToken, getKakaoUserInfo, loginWithKakao, issueAccessToken ,rotateRefreshToken, logoutUser } from "../services/auth.service.js";
 import { LoginRequiredError } from "../errors.js";
 
 export const kakaoLoginRedirect = (req, res) => {
@@ -12,17 +12,18 @@ export const kakaoCallback = async (req, res) => {
 
         const kakao_accessToken = await getKakaoToken(code); //URL code를 통해 token 가져오기
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken); //토큰으로 유저 정보 가져오기
-        const { userId, tokens } = await loginWithKakao(kakaoUser); //유저 정보 확인 or DB 저장 후 user객체 반환
+        const { user, tokens } = await loginWithKakao(kakaoUser); //유저 정보 확인 or DB 저장 후 user객체 반환
 
-        return res.success({
+        return res.success({ //redirect 변환 여부 확인
             message: "카카오 로그인 성공",
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
-            id: userId,
+            id: user.id,
+            job_category_id: user.job_category_id,
             user: {
-                kakaoId: kakaoUser.id,
-                nickname: kakaoUser.kakao_account?.profile?.nickname,
-                email: kakaoUser.kakao_account?.email
+                kakaoId: user.kakao_id,
+                nickname: user.nickname,
+                email: user.email
             }
         });
     } catch (err) {
@@ -48,12 +49,14 @@ export const refreshRotation = async (req, res) => {
     try {
         const userId = req.user.id;//verifyRefreshJWT 미들웨어에서 검증 끝낸 refreshToken의 id 가져옴
 
+        const newAccessToken = await issueAccessToken(userId);
         const rotated = await rotateRefreshToken(userId);
 
         return res.success({
             message: "Token rotation successful",
             userId: rotated.userId, //userId는 유지
-            tokens: rotated.tokens //accessToken, refreshToken은 교체
+            accessToken: newAccessToken, //accessToken 교체
+            refreshToken: rotated.refreshToken, //refreshToken 교체
         });
     } catch (err) {
         return res.error({ status: 401, errorCode: "ROTATION_FAIL", reason: err.message });
