@@ -9,10 +9,10 @@ export const userRepository = { //유저 조회
         return rows[0] || null;
     },
 
-    createUser: async (provider, kakao_id, email, nickname) => { //유저 생성
+    createUser: async (provider, kakao_id, email, nickname, job_category_id) => { //유저 생성
         const [result] = await pool.query(
-        "INSERT INTO user(provider, kakao_id, email, nickname) VALUES (?, ?, ?, ?)",
-        [provider, kakao_id, email, nickname]
+        "INSERT INTO user(provider, kakao_id, email, nickname, job_category_id) VALUES (?, ?, ?, ?, ?)",
+        [provider, kakao_id, email, nickname, job_category_id]
         );
         return result.insertId;
     },
