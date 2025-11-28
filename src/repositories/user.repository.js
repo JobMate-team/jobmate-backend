@@ -15,5 +15,11 @@ export const userRepository = { //유저 조회
         [provider, kakao_id, email, nickname]
         );
         return result.insertId;
+    },
+
+    findById: async (id) => {
+        const [rows] = await pool.query("SELECT * FROM user WHERE id = ?", [id]);
+        return rows[0] || null;
     }
+    
 };
