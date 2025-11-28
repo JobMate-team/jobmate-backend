@@ -2,7 +2,7 @@ import { toggleReviewLike } from "../services/like.service.js";
 
 export const toggleReviewLikeController = async (req, res) => {
   try {
-    const userId = req.user_id;          // 미들웨어에서 넣어준 사용자 ID
+    const userId = req.user.id;         
     const reviewId = req.params.reviewId;
 
     const result = await toggleReviewLike(userId, reviewId);
