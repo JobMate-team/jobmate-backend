@@ -3,6 +3,7 @@ import reviewRouter from "./routers/review.route.js";
 import likeRouter from "./routers/like.route.js";
 import authRoutes from "./routers/auth.route.js";
 import userRouter from "./routers/user.route.js"
+import historyRouter from "./routers/history.route.js";
 
 //import { redisClient } from "./config/redis.config.js";
 
@@ -58,6 +59,7 @@ app.use("/reviews", likeRouter);
 
 app.use("/auth", authRoutes); //auth 경로 라우트
 app.use("/user", userRouter); //user 경로 라우트
+app.use("/history", historyRouter);
 
 // 서버 시작
 app.listen(port, () => {
