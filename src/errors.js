@@ -6,3 +6,23 @@ export class LoginRequiredError extends Error {
     this.data = data;
   }
 }
+
+export class BadRequestError extends Error {
+  errorCode = "HISTORY_ALREADY_EXISTS";
+  constructor(reason, data) {
+    super(reason);
+    this.reason = reason;
+    this.data = data;
+  }
+}
+
+export class ForbiddenError extends Error {
+  statusCode = 403;
+  errorCode = "FORBIDDEN";
+
+  constructor(reason, data) {
+    super(reason);
+    this.reason = reason;
+    this.data = data;
+  }
+}
