@@ -61,6 +61,19 @@ app.use("/auth", authRoutes); //auth 경로 라우트
 app.use("/user", userRouter); //user 경로 라우트
 app.use("/history", historyRouter);
 
+
+// 전역 에러 핸들러
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+
+  return res.error({
+    status: err.statusCode || 500,
+    errorCode: err.errorCode || "SERVER_ERROR",
+    reason: err.reason || err.message || "서버 오류",
+    data: err.data || null
+  });
+});
+
 // 서버 시작
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

@@ -1,6 +1,7 @@
 import { 
     checkHistoryExists, saveHistory, checkCoachingSessionOwner,
-    getUserHistoryList, getHistoryDetail
+    getUserHistoryList, getHistoryDetail,
+    checkHistoryIdExists, checkHistoryOwner, deleteHistoryById, deleteAllHistoryByUserId
 } from "../repositories/history.repository.js";
 import { BadRequestError, ForbiddenError,NotFoundError } from "../errors.js";
 
@@ -44,4 +45,33 @@ export const fetchHistoryDetail = async (userId, historyId) => {
   }
 
   return detail;
+};
+
+// 히스토리에서 개별 삭제
+export const removeHistory = async (userId, historyId) => {
+  // 히스토리 존재 여부
+  const exists = await checkHistoryIdExists(historyId);
+  if (!exists) {
+    throw new NotFoundError("해당 히스토리를 찾을 수 없습니다.", { historyId });
+  }
+
+  // 소유자 확인
+  const isOwner = await checkHistoryOwner(historyId, userId);
+  if (!isOwner) {
+    throw new ForbiddenError("해당 히스토리를 삭제할 권한이 없습니다.", { historyId });
+  }
+
+  // 삭제
+  await deleteHistoryById(historyId);
+
+  return { deleted: true, historyId };
+};
+
+export const removeAllHistory = async (userId) => {
+  const deletedCount = await deleteAllHistoryByUserId(userId);
+
+  return {
+    deleted: true,
+    deletedCount
+  };
 };
