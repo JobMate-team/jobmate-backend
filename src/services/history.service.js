@@ -1,5 +1,8 @@
-import { checkHistoryExists, saveHistory, checkCoachingSessionOwner } from "../repositories/history.repository.js";
-import { BadRequestError, ForbiddenError } from "../errors.js";
+import { 
+    checkHistoryExists, saveHistory, checkCoachingSessionOwner,
+    getUserHistoryList, getHistoryDetail
+} from "../repositories/history.repository.js";
+import { BadRequestError, ForbiddenError,NotFoundError } from "../errors.js";
 
 export const createHistory = async (userId, coachingId) => {
 
@@ -27,4 +30,18 @@ export const createHistory = async (userId, coachingId) => {
     coaching_id: coachingId,
     history_id: historyId
   };
+};
+
+export const fetchUserHistoryList = async (userId) => {
+  return await getUserHistoryList(userId);
+};
+
+export const fetchHistoryDetail = async (userId, historyId) => {
+  const detail = await getHistoryDetail(userId, historyId);
+
+  if (!detail) {
+    throw new NotFoundError("해당 히스토리를 찾을 수 없습니다.", { historyId });
+  }
+
+  return detail;
 };
