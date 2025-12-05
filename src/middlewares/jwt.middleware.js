@@ -16,7 +16,11 @@ export const verifyServiceAccessJWT = (req, res, next) => {
         return res.error({ status: 401, errorCode: "INVALID_TOKEN_TYPE", reason: "Not an access token" });
         }
         
-        req.user = { id: decoded.id }; //다음 라우트에서 req.user.id 정보 사용 가능
+        req.user = { 
+            id: decoded.id,
+            role: decoded.role || "user"   // 기본값 user
+        };
+        
         next();
     } catch (err) {
         return res.error({ status: 401, errorCode: "INVALID_OR_EXPIRED", reason: err.message });
