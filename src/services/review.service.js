@@ -22,22 +22,24 @@ export const getReview = async (reviewId) => {
   return review;
 };
 
-export const updateReview = async (user_id, reviewId, body) => {
+export const updateReview = async (user_id, reviewId, body, isAdmin, adminId) => {
   const existing = await getReviewRepo(reviewId);
   if (!existing) throw new Error("리뷰를 찾을 수 없습니다.");
-  if (existing.user_id !== user_id) throw new Error("본인이 작성한 후기만 수정할 수 있습니다.");
+  if (!isAdmin && existing.user_id !== user_id) throw new Error("본인이 작성한 후기만 수정할 수 있습니다.");
 
-  await updateReviewRepo(reviewId, body);
+  const editedByAdminId = isAdmin ? adminId : null;
+
+  await updateReviewRepo(reviewId, body, editedByAdminId);
   return await getReviewRepo(reviewId);
 };
 
-export const deleteReview = async (user_id, reviewId) => {
+export const deleteReview = async (user_id, reviewId, isAdmin) => {
   const existing = await getReviewRepo(reviewId);
   if (!existing) {
     throw new Error("리뷰를 찾을 수 없습니다.");
   }
 
-  if (existing.user_id !== user_id) {
+  if (!isAdmin && existing.user_id !== user_id) {
     throw new Error("본인이 작성한 후기만 삭제할 수 있습니다.");
   }
 
