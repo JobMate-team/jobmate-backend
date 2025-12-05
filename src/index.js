@@ -4,6 +4,7 @@ import likeRouter from "./routers/like.route.js";
 import authRoutes from "./routers/auth.route.js";
 import userRouter from "./routers/user.route.js"
 import historyRouter from "./routers/history.route.js";
+import adminRoutes from "./routers/admin.route.js";
 
 //import { redisClient } from "./config/redis.config.js";
 
@@ -60,6 +61,7 @@ app.use("/reviews", likeRouter);
 app.use("/auth", authRoutes); //auth 경로 라우트
 app.use("/user", userRouter); //user 경로 라우트
 app.use("/history", historyRouter);
+app.use("/admin", adminRoutes);
 
 
 // 전역 에러 핸들러
@@ -78,3 +80,6 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+
+
