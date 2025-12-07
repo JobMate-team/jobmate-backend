@@ -18,15 +18,22 @@ export const getAdminReviewDetail = async (reviewId) => {
 
 // 수정
 export const adminUpdateReview = async (reviewId, adminId, updateData) => {
-  // 기존 후기 존재하는지 확인
   const existing = await findAdminReviewDetail(reviewId);
   if (!existing) return null;
 
-  await updateReviewByAdmin(reviewId, adminId, updateData);
-  
-  // 업데이트 후 다시 조회해서 반환
+  const updateFields = {
+    company_name: updateData.company_name ?? existing.company_name,
+    job_category_id: updateData.job_category_id ?? existing.job_category_id,
+    content: updateData.content ?? existing.content,
+    interview_tip: updateData.interview_tip ?? existing.interview_tip,
+    edited_by_admin_id: adminId
+  };
+
+  await updateReviewByAdmin(reviewId, updateFields);
+
   return await findAdminReviewDetail(reviewId);
 };
+
 
 export const adminDeleteReview = async (reviewId) => {
   // 존재하는지 확인
