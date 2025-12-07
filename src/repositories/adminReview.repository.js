@@ -36,6 +36,7 @@ export const findAdminReviewDetail = async (reviewId) => {
     SELECT 
       r.id,
       r.company_name,
+      r.job_category_id,
       r.content,
       r.interview_tip,
       r.likes,
@@ -54,8 +55,8 @@ export const findAdminReviewDetail = async (reviewId) => {
 };
 
 // 수정
-export const updateReviewByAdmin = async (reviewId, adminId, updateData) => {
-  const { company_name, job_category_id, content, interview_tip } = updateData;
+export const updateReviewByAdmin = async (reviewId, updateData) => {
+  const { company_name, job_category_id, content, interview_tip, edited_by_admin_id } = updateData;
 
   const query = `
     UPDATE review
@@ -63,7 +64,7 @@ export const updateReviewByAdmin = async (reviewId, adminId, updateData) => {
       company_name = ?,
       job_category_id = ?,
       content = ?,
-      interview_tip = ?,
+      interview_tip = ?, 
       edited_by_admin_id = ?
     WHERE id = ?
   `;
@@ -73,13 +74,13 @@ export const updateReviewByAdmin = async (reviewId, adminId, updateData) => {
     job_category_id,
     content,
     interview_tip,
-    adminId,
+    edited_by_admin_id, 
     reviewId
   ];
 
-  const [result] = await pool.execute(query, params);
-  return result;
+  return pool.execute(query, params);
 };
+
 
 // 리뷰 좋아요 먼저 삭제
 export const deleteReviewLikes = async (reviewId) => {
