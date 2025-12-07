@@ -1,16 +1,26 @@
 import express from "express";
-import { adminLoginController } from "../controllers/admin.controller.js";
-import { getAdminCoachingList } from "../controllers/adminCoaching.controller.js";
 import { verifyServiceAccessJWT } from "../middlewares/jwt.middleware.js";
 import { setUserRole } from "../middlewares/role.middleware.js";
 import { adminOnly } from "../middlewares/adminOnly.middleware.js";
-import { getAdminCoachingDetail } from "../controllers/adminCoaching.controller.js";
+import { adminLoginController } from "../controllers/admin.controller.js";
+import { getAdminCoachingList, getAdminCoachingDetail } from "../controllers/adminCoaching.controller.js";
+import { 
+    adminGetReviewList, adminGetReviewDetail,
+    adminPatchReview, adminDeleteReviewController
+ } from "../controllers/adminReview.controller.js";
+
 
 const router = express.Router();
 
-// 관리자 로그인
-router.post("/login", adminLoginController);
+
+router.post("/login", adminLoginController); // 관리자 로그인
 router.get("/coaching", verifyServiceAccessJWT, setUserRole, adminOnly, getAdminCoachingList)
 router.get("/coaching/:coachingId", verifyServiceAccessJWT, setUserRole, adminOnly, getAdminCoachingDetail)
+router.get("/reviews", verifyServiceAccessJWT, setUserRole, adminOnly, adminGetReviewList)
+router.get("/reviews/:reviewId", verifyServiceAccessJWT, setUserRole, adminOnly, adminGetReviewDetail)
+
+router.patch("/reviews/:reviewId", verifyServiceAccessJWT, setUserRole, adminOnly, adminPatchReview);
+
+router.delete("/reviews/:reviewId", verifyServiceAccessJWT, setUserRole, adminOnly, adminDeleteReviewController);
 
 export default router;
