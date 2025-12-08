@@ -7,14 +7,14 @@ import {
 import { getReviewRepo } from "../repositories/review.repository.js";
 
 export const toggleReviewLike = async (userId, reviewId) => {
-  // ¸®ºä Á¸Àç ¿©ºÎ Ã¼Å©
+  // ë¦¬ë·° ì¡´ìž¬ ì—¬ë¶€ ì²´í¬
   const review = await getReviewRepo(reviewId);
-  if (!review) throw new Error("Á¸ÀçÇÏÁö ¾Ê´Â ¸®ºäÀÔ´Ï´Ù.");
+  if (!review) throw new Error("ì¡´ìž¬í•˜ì§€ ì•ŠëŠ” ë¦¬ë·°ìž…ë‹ˆë‹¤.");
 
-  // ÁÁ¾Æ¿ä ¿©ºÎ Ã¼Å©
+  // ì¢‹ì•„ìš” ì—¬ë¶€ ì²´í¬
   const existing = await getLikeByUserRepo(reviewId, userId);
 
-  // ÁÁ¾Æ¿ä Ãë¼Ò
+  // ì¢‹ì•„ìš” ì·¨ì†Œ
   if (existing) {
     await removeLikeRepo(reviewId, userId);
     await updateReviewLikeCountRepo(reviewId, -1);
@@ -22,7 +22,7 @@ export const toggleReviewLike = async (userId, reviewId) => {
     return { reviewId, liked: false };
   }
 
-  // ÁÁ¾Æ¿ä Ãß°¡
+  // ì¢‹ì•„ìš” ì¶”ê°€
   await addLikeRepo(reviewId, userId);
   await updateReviewLikeCountRepo(reviewId, +1);
 
