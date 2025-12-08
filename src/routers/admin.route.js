@@ -9,6 +9,7 @@ import {
     adminPatchReview, adminDeleteReviewController
  } from "../controllers/adminReview.controller.js";
 import { getAdminQuestions, createAdminQuestion, updateAdminQuestion, deleteAdminQuestion } from "../controllers/adminQuestion.controller.js";
+import { getAdminUsers, getUsersDashboard } from "../controllers/adminUser.controller.js";
 
 const router = express.Router();
 
@@ -27,6 +28,11 @@ router.get("/question-templates", verifyServiceAccessJWT, setUserRole, adminOnly
 router.post("/question-templates", verifyServiceAccessJWT, setUserRole, adminOnly, createAdminQuestion);
 router.patch("/question-templates/:questionId", verifyServiceAccessJWT, setUserRole, adminOnly, updateAdminQuestion);
 router.delete("/question-templates/:questionId", verifyServiceAccessJWT, setUserRole, adminOnly, deleteAdminQuestion);
+// 사용자 관리 페이지
+router.get("/users", verifyServiceAccessJWT, setUserRole, adminOnly, getAdminUsers);
+router.get("/users/dashboard", verifyServiceAccessJWT, setUserRole, adminOnly, getUsersDashboard);
+
+
 
 
 
