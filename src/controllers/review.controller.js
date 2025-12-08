@@ -6,12 +6,18 @@ import {
   getReviewList
 } from "../services/review.service.js";
 
-import { getAuthUserId } from "../utils/auth.js";
-
 // 후기 생성
 export const createReviewController = async (req, res) => {
   try {
-    const review = await createReview(req.user_id, req.body);
+    if (req.isAdmin) {
+      return res.error({
+        status: 403,
+        errorCode: "ADMIN_CANNOT_CREATE_REVIEW",
+        reason: "관리자는 후기를 작성할 수 없습니다."
+      });
+    }
+
+    const review = await createReview(req.user.id, req.body);
     return res.success(review);
   } catch (err) {
     console.error(err);
@@ -27,7 +33,11 @@ export const createReviewController = async (req, res) => {
 // 후기 상세 조회
 export const getReviewController = async (req, res) => {
   try {
-    const review = await getReview(req.params.reviewId);
+    const review = await getReview(
+      req.params.reviewId,
+      req.isAdmin ? null : req.user?.id
+    );
+
     return res.success(review);
   } catch (err) {
     return res.error({
@@ -42,7 +52,7 @@ export const getReviewController = async (req, res) => {
 // 후기 수정
 export const updateReviewController = async (req, res) => {
   try {
-    const updated = await updateReview(req.user_id, req.params.reviewId, req.body);
+    const updated = await updateReview(req.user.id, req.params.reviewId, req.body, req.isAdmin, req.isAdmin ? req.user.id : null);
     return res.success(updated);
   } catch (err) {
     console.error(err);
@@ -58,7 +68,7 @@ export const updateReviewController = async (req, res) => {
 // 후기 삭제
 export const deleteReviewController = async (req, res) => {
   try {
-    const result = await deleteReview(req.user_id, req.params.reviewId);
+    const result = await deleteReview(req.user.id, req.params.reviewId, req.isAdmin);
     return res.success(result);
   } catch (err) {
     console.error(err);
@@ -71,17 +81,13 @@ export const deleteReviewController = async (req, res) => {
 };
 
 
+// 후기 목록 조회 (로그인 여부 optional)
 export const getReviewListController = async (req, res) => {
   try {
-    let userId = null;
-
-    try {
-      userId = getAuthUserId(req); 
-    } catch (_) {
-      userId = null; 
-    }
-
+    const userId = req.user && !req.isAdmin ? req.user.id : null;
     const list = await getReviewList(req.query, userId);
+
+
     return res.success(list);
 
   } catch (err) {
@@ -92,4 +98,3 @@ export const getReviewListController = async (req, res) => {
     });
   }
 };
-

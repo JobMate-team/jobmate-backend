@@ -3,9 +3,14 @@ import reviewRouter from "./routers/review.route.js";
 import likeRouter from "./routers/like.route.js";
 import authRoutes from "./routers/auth.route.js";
 import userRouter from "./routers/user.route.js"
+
 import coachRouter from "./routers/coach.route.js"
 // 토큰 테스트용 (테스트 끝나면 지울거)
 import authRouter from "./routers/auth-test.route.js";
+
+import historyRouter from "./routers/history.route.js";
+import adminRoutes from "./routers/admin.route.js";
+
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -53,13 +58,27 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
-app.use("/auth", authRouter);
 
 app.use("/reviews", reviewRouter); 
 app.use("/reviews", likeRouter);
 
 app.use("/auth", authRoutes); //auth 경로 라우트
 app.use("/user", userRouter); //user 경로 라우트
+app.use("/history", historyRouter);
+app.use("/admin", adminRoutes);
+
+
+// 전역 에러 핸들러
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+
+  return res.error({
+    status: err.statusCode || 500,
+    errorCode: err.errorCode || "SERVER_ERROR",
+    reason: err.reason || err.message || "서버 오류",
+    data: err.data || null
+  });
+});
 
 app.use("/coach", coachRouter)
 
@@ -67,3 +86,6 @@ app.use("/coach", coachRouter)
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+
+
