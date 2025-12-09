@@ -32,6 +32,21 @@ export const getQuestionListService = async(job_id) => {
     return await getQuestionListRepo(job_id);
 }
 
+export const recommendAIQuestionService = async (modal_input_question) => {
+    const AI_SERVER_URL = process.env.AI_SERVER_URL;
+
+    try {
+        const response = await axios.post(`${AI_SERVER_URL}/generate-question`, {
+        modal_input_question,
+        });
+
+        return response.data.question;
+    } catch (err) {
+        console.error("AI 추천 질문 요청 실패:", err.message);
+        throw new Error("AI 서버에서 추천 질문을 생성하지 못했습니다.");
+    }
+};
+
 export const coachFeedbackService = async({ 
     userId,
     job_category_id,
@@ -58,7 +73,7 @@ export const coachFeedbackService = async({
         throw new Error("직무/세부 직무/회사 정보를 찾을 수 없습니다.");
     }
 
-    const aiResponse = await axios.post("http://127.0.0.1:8001/ai-feedback", {
+    const aiResponse = await axios.post(`${AI_SERVER_URL}/ai-feedback`, {
         job_group: jobGroup,
         job: jobRole,
         company: company,

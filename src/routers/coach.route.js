@@ -4,9 +4,10 @@ import {
     getJobCategories,
     getJobRoles, 
     getCompaniesByRole, 
-    getQuestionList, 
+    getQuestionList,
+    recommendAIQuestion,
     coachFeedback,
-    saveFeedback
+    saveFeedback,
 } from "../controllers/coach.controller.js";
 
 const router = express.Router();
@@ -16,6 +17,8 @@ router.get("/job-categories/:categoryId/roles", getJobRoles);
 router.get("/roles/:roleId/companies", getCompaniesByRole);
 
 router.get("/questions", getQuestionList);
+
+router.post("/recommend-question", recommendAIQuestion);
 
 router.post("/feedback", verifyServiceAccessJWT, coachFeedback);
 router.post("/feedback/save", verifyServiceAccessJWT, saveFeedback);

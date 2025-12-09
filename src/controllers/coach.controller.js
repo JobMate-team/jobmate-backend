@@ -2,7 +2,8 @@ import {
     getJobCategoriesService,
     getJobRolesService, 
     getCompaniesByRoleService,
-    getQuestionListService, 
+    getQuestionListService,
+    recommendAIQuestionService,
     coachFeedbackService,
     saveFeedbackService
 } from "../services/coach.service.js";
@@ -58,6 +59,29 @@ export const getQuestionList = async(req, res) => {
         return res.error({ status: 500, errorCode: "JOB_CATEGORY_FETCH_FAIL", reason: err.message })
     }
 }
+
+export const recommendAIQuestion = async (req, res) => {
+    try {
+        const { modal_input_question } = req.body;
+
+        if (!modal_input_question) {
+        return res.error({
+            status: 400,
+            errorCode: "MODAL_QUESTION_REQUIRED",
+            reason: "추천 질문 생성을 위해 MODAL_QUESTION이 필요합니다."
+        });
+        }
+
+        const question = await recommendAIQuestionService(modal_input_question);
+        return res.success({ question });
+    } catch (err) {
+        return res.error({
+        status: 500,
+        errorCode: "AI_RECOMMEND_QUESTION_FAIL",
+        reason: err.message,
+        });
+    }
+};
 
 export const coachFeedback = async (req, res) => {
     const userId = req.user.id; //JWT 미들웨어에서 검증된 사용자 ID

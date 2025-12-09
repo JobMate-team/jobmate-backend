@@ -6,7 +6,7 @@ import userRouter from "./routers/user.route.js"
 
 import coachRouter from "./routers/coach.route.js"
 // 토큰 테스트용 (테스트 끝나면 지울거)
-import authRouter from "./routers/auth-test.route.js";
+//import authRouter from "./routers/auth-test.route.js";
 
 import historyRouter from "./routers/history.route.js";
 import adminRoutes from "./routers/admin.route.js";
