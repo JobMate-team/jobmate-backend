@@ -28,12 +28,16 @@ export const saveHistory = async (userId, coachingId) => {
 export const getUserHistoryList = async (userId) => {
   const sql = `
     SELECT
-      h.id AS history_id, h.coaching_id, h.created_at,
-      cs.job_category_id, q.content AS question_content,
-      cs.answer_text, cs.ai_feedback
+      h.id AS history_id,
+      h.coaching_id,
+      h.created_at,
+      cs.job_category_id,
+      COALESCE(q.content, cs.question_text) AS question_content,
+      cs.answer_text,
+      cs.ai_feedback
     FROM history h
     JOIN coaching_session cs ON h.coaching_id = cs.id
-    JOIN question q ON cs.question_id = q.id
+    LEFT JOIN question q ON cs.question_id = q.id
     WHERE h.user_id = ?
     ORDER BY h.created_at DESC;
   `;
@@ -46,12 +50,18 @@ export const getUserHistoryList = async (userId) => {
 export const getHistoryDetail = async (userId, historyId) => {
   const sql = `
     SELECT
-      h.id AS history_id, h.coaching_id, h.created_at,
-      cs.job_category_id, cs.question_id, q.content AS question_content,
-      cs.answer_text, cs.ai_feedback, cs.ai_model_answer
+      h.id AS history_id,
+      h.coaching_id,
+      h.created_at,
+      cs.job_category_id,
+      cs.question_id,
+      COALESCE(q.content, cs.question_text) AS question_content,
+      cs.answer_text,
+      cs.ai_feedback,
+      cs.ai_model_answer
     FROM history h
     JOIN coaching_session cs ON h.coaching_id = cs.id
-    JOIN question q ON cs.question_id = q.id
+    LEFT JOIN question q ON cs.question_id = q.id
     WHERE h.user_id = ? AND h.id = ?
     LIMIT 1;
   `;
@@ -59,6 +69,7 @@ export const getHistoryDetail = async (userId, historyId) => {
   const [rows] = await pool.query(sql, [userId, historyId]);
   return rows[0];
 };
+
 
 // 히스토리 단건 존재 여부 확인
 export const checkHistoryIdExists = async (historyId) => {
