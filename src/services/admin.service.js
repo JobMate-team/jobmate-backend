@@ -10,7 +10,7 @@ export const adminLogin = async (email, password) => {
   const isMatch = await bcrypt.compare(password, admin.password);
   if (!isMatch) throw new Error("비밀번호가 일치하지 않습니다.");
 
-  // admin 전용 access token
+  // Access Token
   const accessToken = jwt.sign(
     {
       id: admin.id,
@@ -22,7 +22,7 @@ export const adminLogin = async (email, password) => {
     { expiresIn: "2h" }
   );
 
-  // admin 전용 refresh token
+  // Refresh Token
   const refreshToken = jwt.sign(
     {
       id: admin.id,
@@ -33,8 +33,8 @@ export const adminLogin = async (email, password) => {
     { expiresIn: "14d" }
   );
 
-  // Redis 저장 (refresh rotation)
-  await redisClient.set(`admin-refresh:${admin.id}`, refreshToken);
+  // Redis 저장
+  await redisClient.set(`admin-refresh:${admin.id}`, refreshToken, "EX", 60 * 60 * 24 * 14);
 
   return {
     admin: {
@@ -42,9 +42,7 @@ export const adminLogin = async (email, password) => {
       email: admin.email,
       role: "admin"
     },
-    tokens: {
-      accessToken,
-      refreshToken
-    }
+    accessToken,
+    refreshToken
   };
 };

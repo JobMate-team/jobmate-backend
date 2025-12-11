@@ -6,7 +6,26 @@ export const adminLoginController = async (req, res) => {
 
     const result = await adminLogin(email, password);
 
-    return res.success(result);
+    // AccessToken 쿠키 저장
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: false,  // 배포 시 true
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 2  // 2시간
+    });
+
+    // RefreshToken 쿠키 저장
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 14  // 14일
+    });
+
+    return res.success({
+      admin: result.admin   // admin 정보만 전달
+    });
+
   } catch (err) {
     return res.error({
       status: 401,
