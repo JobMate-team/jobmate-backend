@@ -7,6 +7,7 @@ import adminRoutes from "./routers/admin.route.js";
 import coachRouter from "./routers/coach.route.js";
 import userRouter from "./routers/user.route.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import { verifyServiceAccessJWT } from "./middlewares/jwt.middleware.js";
 
@@ -37,10 +38,8 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  console.log("AUTH HEADER >>>", req.headers.authorization);
-  next();
-});
+app.use(cookieParser());
+
 
 // 요청 로깅
 app.use((req, res, next) => {
