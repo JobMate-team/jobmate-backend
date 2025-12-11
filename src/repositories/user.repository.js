@@ -27,3 +27,11 @@ export const updateJobCategoryRepo = async (userId, jobCategoryId) => {
         [jobCategoryId, userId]
     );
 };
+
+export const updateNickname = async (userId, nickname) => {
+    const [result] = await pool.query(
+        "UPDATE user SET nickname = ? WHERE id = ?",
+        [nickname, userId]
+    );
+    return result.affectedRows > 0;
+};

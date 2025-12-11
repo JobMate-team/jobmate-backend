@@ -5,6 +5,7 @@ import authRoutes from "./routers/auth.route.js";
 import historyRouter from "./routers/history.route.js";
 import adminRoutes from "./routers/admin.route.js";
 import coachRouter from "./routers/coach.route.js";
+import userRouter from "./routers/user.route.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -83,6 +84,7 @@ app.use("/reviews", likeRouter);
 
 app.use("/auth", authRoutes); //auth 경로 라우트
 app.use("/coach", verifyServiceAccessJWT, coachRouter);
+app.use("/user", verifyServiceAccessJWT, userRouter);
 app.use("/history", historyRouter);
 app.use("/admin", adminRoutes);
 

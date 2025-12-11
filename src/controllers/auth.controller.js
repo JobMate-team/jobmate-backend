@@ -9,6 +9,7 @@ import { buildKakaoLoginURL,
     logoutUser,
 
 } from "../services/auth.service.js";
+import { redisClient } from "../config/redis.config.js";
 import { LoginRequiredError } from "../errors.js";
 
 export const kakaoLoginRedirect = (req, res) => {
@@ -24,7 +25,6 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // accessToken 쿠키 저장
         res.cookie("accessToken", tokens.accessToken, {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === "true",   // 배포 시 true
@@ -32,7 +32,6 @@ export const kakaoCallback = async (req, res) => {
             maxAge: 1000 * 60 * 30, // 30분
         });
 
-        // refreshToken 쿠키 저장
         res.cookie("refreshToken", tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === "true",  // 배포 시 true
