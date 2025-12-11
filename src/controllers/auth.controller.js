@@ -9,6 +9,7 @@ import { buildKakaoLoginURL,
     logoutUser,
 
 } from "../services/auth.service.js";
+import { redisClient } from "../config/redis.config.js";
 import { LoginRequiredError } from "../errors.js";
 
 export const kakaoLoginRedirect = (req, res) => {
