@@ -24,25 +24,33 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // LocalStorage 방식: 쿠키 제거 + redirect로 토큰 전달
-        const redirectURL =
-            `${process.env.CLIENT_SUCCESS_REDIRECT}` +
-            `?accessToken=${tokens.accessToken}` +
-            `&refreshToken=${tokens.refreshToken}` +
-            `&userId=${user.id}`;
+        // accessToken 쿠키 저장
+        res.cookie("accessToken", tokens.accessToken, {
+            httpOnly: true,
+            secure: false,   // 배포 시 true
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 30,   // 30분
+        });
 
-        return res.redirect(redirectURL);
+        // refreshToken 쿠키 저장
+        res.cookie("refreshToken", tokens.refreshToken, {
+            httpOnly: true,
+            secure: false,   // 배포 시 true
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,   // 7일
+        });
+
+        // FE로 redirect (토큰은 절대 노출하지 않음)
+        return res.redirect(process.env.CLIENT_SUCCESS_REDIRECT);
 
     } catch (err) {
-        if (err instanceof LoginRequiredError) {
-            return res.redirect(
-                `${process.env.CLIENT_FAIL_REDIRECT}?error=${err.reason}`
-            );
-        }
 
-        return res.redirect(
-            `${process.env.CLIENT_FAIL_REDIRECT}?error=server_error`
-        );
+        // LoginRequiredError라도 redirect 하지 않음 → JSON으로 에러 반환
+        return res.error({
+            status: 400,
+            errorCode: "KAKAO_LOGIN_FAILED",
+            reason: err.message || "Kakao login failed"
+        });
     }
 };
 
@@ -110,12 +118,40 @@ export const refreshRotation = async (req, res) => {
 };
 
 export const logoutInvalidate = async (req, res) => {
-    try {
-        const userId = await logoutUser(req.user.id); //verifyServiceAccessJWT 미들웨어에서 검증 끝낸 accessToken의 id 가져옴
+  try {
+    const { id, role } = req.user;
 
-        return res.success({ message:"Logout success", userId });
+    // 1) Redis refreshToken 삭제
+    const redisKey = role === "admin"
+      ? `admin-refresh:${id}`
+      : `refresh:${id}`;
 
-    } catch (err) {
-        return res.error({ status:401, errorCode:"LOGOUT_FAIL", reason: err.message });
-    }
+    await redisClient.del(redisKey);
+
+    // 2) 쿠키 삭제
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
+
+    // 3) 응답 반환
+    return res.success({
+      message: "Logout success",
+      userId: id,
+    });
+
+  } catch (err) {
+    return res.error({
+      status: 401,
+      errorCode: "LOGOUT_FAIL",
+      reason: err.message,
+    });
+  }
 };

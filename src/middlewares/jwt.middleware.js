@@ -1,59 +1,91 @@
 import jwt from "jsonwebtoken";
 import { redisClient } from "../config/redis.config.js";
 
-//accessToken 검증
+// AccessToken 검증 (쿠키 기반)
 export const verifyServiceAccessJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.error({ status: 401, errorCode: "NO_TOKEN", reason: "Access token required" });
-    }
+    const token = req.cookies.accessToken;
 
-    const token = authHeader.split(" ")[1]; //토큰 값만 split
+    if (!token) {
+        return res.error({
+            status: 401,
+            errorCode: "NO_TOKEN",
+            reason: "Access token required"
+        });
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.type !== "access") { //accessToken type이 맞는지
-        return res.error({ status: 401, errorCode: "INVALID_TOKEN_TYPE", reason: "Not an access token" });
+
+        if (decoded.type !== "access") {
+            return res.error({
+                status: 401,
+                errorCode: "INVALID_TOKEN_TYPE",
+                reason: "Not an access token"
+            });
         }
-        
-        req.user = { 
+
+        req.user = {
             id: decoded.id,
-            role: decoded.role || "user"   // 기본값 user
+            role: decoded.role || "user"
         };
-        
+
         next();
+
     } catch (err) {
-        return res.error({ status: 401, errorCode: "INVALID_OR_EXPIRED", reason: err.message });
+        return res.error({
+            status: 401,
+            errorCode: "INVALID_OR_EXPIRED",
+            reason: err.message
+        });
     }
 };
 
-//refreshToken 검증
-export const verifyRefreshJWT = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.error({ status: 401, errorCode: "NO_TOKEN", reason: "Refresh token required" });
-    }
 
-    const refreshToken = authHeader.split(" ")[1];
+// RefreshToken 검증 (쿠키 기반)
+export const verifyRefreshJWT = async (req, res, next) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.error({
+            status: 401,
+            errorCode: "NO_REFRESH_TOKEN",
+            reason: "Refresh token required"
+        });
+    }
 
     try {
         const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
-        if (payload.type !== "refresh") { //refreshToken type이 맞는지
-            return res.error({ status: 401, errorCode: "INVALID_TOKEN_TYPE", reason: "Not a refresh token" });
+        if (payload.type !== "refresh") {
+            return res.error({
+                status: 401,
+                errorCode: "INVALID_TOKEN_TYPE",
+                reason: "Not a refresh token"
+            });
         }
 
-        // rotation 전 상태 검증을 위해 Redis에서 active Refresh와 동일한지 비교도 여기서 처리
-        const redisKey = `refresh:${payload.id}`;
+        const redisKey = payload.role === "admin"
+            ? `admin-refresh:${payload.id}`
+            : `refresh:${payload.id}`;
+
         const stored = await redisClient.get(redisKey);
+
         if (!stored || stored !== refreshToken) {
-            return res.error({ status: 401, errorCode: "REFRESH_NOT_ACTIVE", reason: "Refresh token expired or not active in Redis." });
+            return res.error({
+                status: 401,
+                errorCode: "REFRESH_NOT_ACTIVE",
+                reason: "Refresh token expired or not active"
+            });
         }
 
-        req.user = { id: payload.id };
+        req.user = { id: payload.id, role: payload.role };
         next();
 
     } catch (err) {
-        return res.error({ status: 401, errorCode: "INVALID_OR_EXPIRED", reason: err.message });
+        return res.error({
+            status: 401,
+            errorCode: "INVALID_OR_EXPIRED",
+            reason: err.message
+        });
     }
 };
