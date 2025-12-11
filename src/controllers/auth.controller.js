@@ -16,7 +16,7 @@ export const kakaoCallback = async (req, res) => {
 
         // 프론트 URL로 redirect 
         const redirectURL =
-            `${process.env.KAKAO_REDIRECT_URI}?` +
+            `${process.env.FRONT_KAKAO_REDIRECT}?` +
             `accessToken=${tokens.accessToken}` +
             `&refreshToken=${tokens.refreshToken}` +
             `&userId=${user.id}`;
