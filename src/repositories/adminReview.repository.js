@@ -6,7 +6,6 @@ export const findAdminReviewList = async (jobCategoryId = null) => {
       r.id,
       r.company_name,
       r.content,
-      LEFT(r.content, 20) AS content_preview,   -- 내용 일부만
       r.likes,
       r.created_at,
       u.nickname AS user_name,
