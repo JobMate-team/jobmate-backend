@@ -24,10 +24,32 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // ---- 너의 HEAD 코드 유지: 쿠키 저장 ----
+        if (process.env.NODE_ENV === "development") {
+            res.cookie("accessToken", tokens.accessToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax",
+                maxAge: 1000 * 60 * 30,
+            });
+
+            res.cookie("refreshToken", tokens.refreshToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax",
+                maxAge: 1000 * 60 * 60 * 24 * 7,
+            });
+
+            // 🔥 JSON으로 응답
+            return res.success({
+                message: "카카오 로그인 성공 (DEV MODE, 쿠키도 발급됨)",
+                user,
+                tokens
+            });
+        }
+
         res.cookie("accessToken", tokens.accessToken, {
             httpOnly: true,
-            secure: false, // localhost → false, deploy → true
+            secure: false,
             sameSite: "lax",
             maxAge: 1000 * 60 * 30,
         });
