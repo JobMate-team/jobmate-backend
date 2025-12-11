@@ -24,28 +24,41 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // LocalStorage 방식: 쿠키 제거 + redirect로 토큰 전달
-        const redirectURL =
-            `${process.env.CLIENT_SUCCESS_REDIRECT}` +
-            `?accessToken=${tokens.accessToken}` +
-            `&refreshToken=${tokens.refreshToken}` +
-            `&userId=${user.id}`;
+        // ---- 너의 HEAD 코드 유지: 쿠키 저장 ----
+        res.cookie("accessToken", tokens.accessToken, {
+            httpOnly: true,
+            secure: false, // localhost → false, deploy → true
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 30,
+        });
 
-        return res.redirect(redirectURL);
+        res.cookie("refreshToken", tokens.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+
+        return res.redirect(process.env.CLIENT_SUCCESS_REDIRECT);
 
     } catch (err) {
+
         if (err instanceof LoginRequiredError) {
-            return res.redirect(
-                `${process.env.CLIENT_FAIL_REDIRECT}?error=${err.reason}`
-            );
+            return res.error({
+                status: 401,
+                errorCode: err.errorCode,
+                reason: err.reason,
+                data: err.data,
+            });
         }
 
-        return res.redirect(
-            `${process.env.CLIENT_FAIL_REDIRECT}?error=server_error`
-        );
+        return res.error({
+            status: 500,
+            errorCode: "SERVER_ERROR",
+            reason: err.message,
+        });
     }
 };
-
 
 export const getMyInfo = async (req, res) => {
     try {
