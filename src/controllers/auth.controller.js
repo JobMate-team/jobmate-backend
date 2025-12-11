@@ -24,20 +24,18 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // accessToken 쿠키 저장
         res.cookie("accessToken", tokens.accessToken, {
             httpOnly: true,
             secure: false,   // 배포 시 true
             sameSite: "lax",
-            maxAge: 1000 * 60 * 30,   // 30분
+            maxAge: 1000 * 60 * 30, // 30분
         });
 
-        // refreshToken 쿠키 저장
         res.cookie("refreshToken", tokens.refreshToken, {
             httpOnly: true,
             secure: false,   // 배포 시 true
             sameSite: "lax",
-            maxAge: 1000 * 60 * 60 * 24 * 7,   // 7일
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
         });
 
         // FE로 redirect (토큰은 절대 노출하지 않음)

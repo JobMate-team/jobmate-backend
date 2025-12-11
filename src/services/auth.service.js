@@ -157,7 +157,6 @@ export const logoutUser = async (userId) => {
     return userId; //결과 반환(안해도 됨)
 };
 
-
 export const getMyInfoService = async (userId) => {
     const user = await findById(userId);
 
