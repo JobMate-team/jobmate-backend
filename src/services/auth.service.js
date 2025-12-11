@@ -2,10 +2,10 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import { LoginRequiredError } from "../errors.js";
 import { 
-    findByProviderId, 
-    createUser, 
-    findById, 
-    updateJobCategoryRepo 
+    findByProviderId,
+    createUser,
+    findById,
+    updateJobCategoryRepo
 } from "../repositories/user.repository.js";
 import { redisClient } from "../config/redis.config.js";
 
@@ -93,7 +93,11 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
     let user = await findByProviderId(provider, kakao_id);
 
     if (!user) { //기존 user 아니면 DB에 추가
-        const newId = await createUser(provider, kakao_id, email, nickname);
+        const newId = await createUser(provider,
+            kakao_id, 
+            email, 
+            nickname,
+        );
         user = await findById(newId);
     }
 
@@ -150,4 +154,18 @@ export const rotateRefreshToken = async (userId) => {
 export const logoutUser = async (userId) => {
     await redisClient.del(`refresh:${userId}`); //Redis의 refresh key 삭제
     return userId; //결과 반환(안해도 됨)
+};
+
+export const updateJobCategoryService = async (userId, jobCategoryId) => {
+    return updateJobCategoryRepo(userId, jobCategoryId);
+};
+
+export const getMyInfoService = async (userId) => {
+    const user = await findById(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
 };

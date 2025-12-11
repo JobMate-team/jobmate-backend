@@ -1,12 +1,13 @@
-import { 
-    buildKakaoLoginURL, 
-    getKakaoToken, 
+import { buildKakaoLoginURL,
+    getKakaoToken,
     getKakaoUserInfo, 
     loginWithKakao,
+    getMyInfoService,
     updateJobCategoryService,
     issueAccessToken,
     rotateRefreshToken,
-    logoutUser
+    logoutUser,
+
 } from "../services/auth.service.js";
 import { LoginRequiredError } from "../errors.js";
 
@@ -23,16 +24,34 @@ export const kakaoCallback = async (req, res) => {
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
         const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        // 프론트 URL로 redirect 
-        const redirectURL =
-            `${process.env.FRONT_KAKAO_REDIRECT}?` +
-            `accessToken=${tokens.accessToken}` +
-            `&refreshToken=${tokens.refreshToken}` +
-            `&userId=${user.id}`;
+        // ---- 너의 HEAD 코드 유지: 쿠키 저장 ----
+        res.cookie("accessToken", tokens.accessToken, {
+            httpOnly: true,
+            secure: false, // localhost → false, deploy → true
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 30,
+        });
 
-        return res.redirect(redirectURL);
+        res.cookie("refreshToken", tokens.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+
+        return res.redirect(process.env.CLIENT_SUCCESS_REDIRECT);
 
     } catch (err) {
+
+        if (err instanceof LoginRequiredError) {
+            return res.error({
+                status: 401,
+                errorCode: err.errorCode,
+                reason: err.reason,
+                data: err.data,
+            });
+        }
+
         return res.error({
             status: 500,
             errorCode: "SERVER_ERROR",
@@ -41,6 +60,48 @@ export const kakaoCallback = async (req, res) => {
     }
 };
 
+export const getMyInfo = async (req, res) => {
+    try {
+        const user = await getMyInfoService(req.user.id);
+
+        return res.success({
+            id: user.id,
+            email: user.email,
+            nickname: user.nickname,
+            job_category_id: user.job_category_id,
+        });
+
+    } catch (err) {
+        return res.error({
+            status: 500,
+            reason: err.message,
+        });
+    }
+};
+
+export const updateJobCategory = async (req, res) => {
+    const userId = req.user.id;              // JWT에서 가져옴
+    const { job_category_id } = req.body;
+
+    if (!job_category_id) {
+        return res.error({
+            status: 400,
+            errorCode: "JOB_CATEGORY_REQUIRED",
+            reason: "job_category_id가 필요합니다."
+        });
+    }
+
+    try {
+        await updateJobCategoryService(userId, job_category_id);
+        return res.success({ message: "직무가 업데이트되었습니다." });
+    } catch (err) {
+        return res.error({
+            status: 500,
+            errorCode: "JOB_CATEGORY_UPDATE_FAIL",
+            reason: err.message
+        });
+    }
+};
 
 export const updateJobCategory = async (req, res) => {
     const userId = req.user.id;

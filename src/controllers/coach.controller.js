@@ -1,11 +1,12 @@
 import { 
     getJobCategoriesService,
     getJobRolesService, 
-    getCompaniesByRoleService,
-    getQuestionListService,
-    recommendAIQuestionService,
+    getCompanyListService,
+    findJobCategoryService,
+    getQuestionsByJobCategoryService,
+    recommendAIQuestionsService,
     coachFeedbackService,
-    saveFeedbackService
+
 } from "../services/coach.service.js";
 import { resolveQuestionText } from "../utils/questionSourceResolver.js";
 
@@ -21,10 +22,22 @@ export const getJobCategories = async(req, res) => {
 
 export const getJobRoles = async (req, res) => {
     try {
-        const { categoryId } = req.params;
-        const data = await getJobRolesService(categoryId);
+        const { jobCategoryId } = req.query;
 
-        return res.success({ jobRoles: data });
+        if (!jobCategoryId) {
+            return res.error({
+                status: 400,
+                errorCode: "jobcategoryId_REQUIRED",
+                reason: "jobcategoryId 쿼리 파라미터가 필요합니다."
+            });
+        }
+
+        const roles = await getJobRolesService(jobCategoryId);
+
+        return res.success({
+            jobCategoryId,
+            roles
+        });
     } catch (err) {
         return res.error({
             status: 500,
@@ -34,56 +47,97 @@ export const getJobRoles = async (req, res) => {
     }
 };
 
-export const getCompaniesByRole = async (req, res) => {
+export const getCompanyList = async (req, res) => {
     try {
-        const { roleId } = req.params;
-        const data = await getCompaniesByRoleService(roleId);
+        const companies = await getCompanyListService();
 
-        return res.success({ companies: data });
+        return res.success({
+            count: companies.length,
+            companies
+        });
     } catch (err) {
         return res.error({
             status: 500,
-            errorCode: "COMPANY_FETCH_FAIL",
+            errorCode: "COMPANY_LIST_FETCH_FAIL",
             reason: err.message
         });
     }
 };
 
-export const getQuestionList = async(req, res) => {
-    try{
-        const { job_id } = req.query;
-        const questionList = await getQuestionListService(job_id);
-
-        return res.success({ questions: questionList });
-    } catch (err){
-        return res.error({ status: 500, errorCode: "JOB_CATEGORY_FETCH_FAIL", reason: err.message })
-    }
-}
-
-export const recommendAIQuestion = async (req, res) => {
+export const getQuestionsByJobCategory = async (req, res) => {
     try {
-        const { modal_input_question } = req.body;
+        const { jobCategoryId } = req.query;
 
-        if (!modal_input_question) {
-        return res.error({
-            status: 400,
-            errorCode: "MODAL_QUESTION_REQUIRED",
-            reason: "추천 질문 생성을 위해 MODAL_QUESTION이 필요합니다."
-        });
+        if (!jobCategoryId) {
+            return res.error({
+                status: 400,
+                errorCode: "jobCategoryId_REQUIRED",
+                reason: "jobCategoryId 쿼리 파라미터가 필요합니다."
+            });
         }
 
-        const question = await recommendAIQuestionService(modal_input_question);
-        return res.success({ question });
+        const jobExists = await findJobCategoryService(jobCategoryId);
+
+        if (!jobExists) {
+            return res.error({
+                status: 400,
+                errorCode: "INVALID_JOB_CATEGORY",
+                reason: "존재하지 않는 직무입니다."
+            });
+        }
+
+        const questions = await getQuestionsByJobCategoryService(jobCategoryId);
+
+        return res.success({
+            jobCategoryId,
+            count: questions.length,
+            questions
+        });
+
     } catch (err) {
         return res.error({
-        status: 500,
-        errorCode: "AI_RECOMMEND_QUESTION_FAIL",
-        reason: err.message,
+            status: 500,
+            errorCode: "QUESTION_FETCH_FAILED",
+            reason: err.message,
         });
     }
 };
 
-export const coachFeedback = async (req, res) => {
+export const recommendAIQuestions = async (req, res) => {
+    try {
+        const { job_family, job, company } = req.body;
+
+        if (!job_family || !job || !company) {
+            return res.error({
+                status: 400,
+                errorCode: "MISSING_FIELDS",
+                reason: "job_family, job, company는 필수입니다."
+            });
+        }
+
+        const questions = await recommendAIQuestionsService({
+            job_family,
+            job,
+            company
+        });
+
+        return res.success({
+            job_family,
+            job,
+            company,
+            questions
+        });
+
+    } catch (err) {
+        return res.error({
+            status: 500,
+            errorCode: "INTERVIEW_GENERATION_FAIL",
+            reason: err.message
+        });
+    }
+};
+
+export const createAndSaveFeedback = async (req, res) => {
     const userId = req.user.id; //JWT 미들웨어에서 검증된 사용자 ID
     const { 
         job_category_id,
@@ -112,52 +166,10 @@ export const coachFeedback = async (req, res) => {
             user_answer
         });
 
+        
+
         return res.success(result);
     } catch (err) {
         return res.error({ status: 500, errorCode: "COACH_FAIL", reason: err.message });
     }
-};
-
-export const saveFeedback = async (req, res) => {
-    const userId = req.user.id;
-
-    const {
-        job_category_id,
-        job_category_name,
-        role_id,
-        role_name,
-        company_id,
-        company_name,
-        question_id,
-        question_text,
-        answer_text,
-        ai_feedback,
-        ai_model_answer,
-    } = req.body;
-
-    try {
-        const result = await saveFeedbackService({
-            userId,
-            job_category_id,
-            job_category_name,
-            role_id,
-            role_name,
-            company_id,
-            company_name,
-            question_id,
-            question_text,
-            answer_text,
-            ai_feedback,
-            ai_model_answer,
-        });
-
-        return res.success(result);
-    } catch (err) {
-        return res.error({
-            status: 500,
-            errorCode: "SAVE_FEEDBACK_FAIL",
-            reason: err.message,
-        });
-    }
-
 };

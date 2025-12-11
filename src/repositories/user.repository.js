@@ -8,10 +8,10 @@ export const findByProviderId = async (provider, kakao_id) => {
     return rows[0] || null;
 };
 
-export const createUser = async (provider, kakao_id, email, nickname) => {
+export const createUser = async (provider, kakao_id, email, nickname, job_category_id) => {
     const [result] = await pool.query(
-        "INSERT INTO user(provider, kakao_id, email, nickname) VALUES (?, ?, ?, ?)",
-        [provider, kakao_id, email, nickname]
+        "INSERT INTO user(provider, kakao_id, email, nickname, job_category_id) VALUES (?, ?, ?, ?, ?)",
+        [provider, kakao_id, email, nickname, job_category_id]
     );
     return result.insertId;
 };

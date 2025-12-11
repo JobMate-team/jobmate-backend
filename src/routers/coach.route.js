@@ -1,26 +1,23 @@
 import express from "express";
-import { verifyServiceAccessJWT } from "../middlewares/jwt.middleware.js";
 import { 
     getJobCategories,
-    getJobRoles, 
-    getCompaniesByRole, 
-    getQuestionList,
-    recommendAIQuestion,
-    coachFeedback,
-    saveFeedback,
+    getJobRoles,
+    getCompanyList,
+    getQuestionsByJobCategory,
+    recommendAIQuestions,
+    createAndSaveFeedback
 } from "../controllers/coach.controller.js";
 
 const router = express.Router();
 
-router.get("/job-categories", getJobCategories);
-router.get("/job-categories/:categoryId/roles", getJobRoles);
-router.get("/roles/:roleId/companies", getCompaniesByRole);
+router.get("/job-category", getJobCategories);
+router.get("/job-roles", getJobRoles);
+router.get("/companies", getCompanyList);
 
-router.get("/questions", getQuestionList);
+router.get("/questions", getQuestionsByJobCategory);
 
-router.post("/recommend-question", recommendAIQuestion);
+router.post("/recommend-questions", recommendAIQuestions);
 
-router.post("/feedback", verifyServiceAccessJWT, coachFeedback);
-router.post("/feedback/save", verifyServiceAccessJWT, saveFeedback);
+router.post("/feedback/save", createAndSaveFeedback);
 
 export default router;

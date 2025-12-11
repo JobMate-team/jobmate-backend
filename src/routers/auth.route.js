@@ -1,10 +1,10 @@
 import express from "express";
-import { 
-    kakaoLoginRedirect,
-    kakaoCallback,
+import { kakaoLoginRedirect,
+    kakaoCallback, 
     updateJobCategory,
-    refreshRotation,
-    logoutInvalidate
+    refreshRotation, 
+    logoutInvalidate,
+    getMyInfo
 } from "../controllers/auth.controller.js";
 import { verifyServiceAccessJWT, verifyRefreshJWT } from "../middlewares/jwt.middleware.js";
 
@@ -12,6 +12,9 @@ const router = express.Router();
 
 router.get("/kakao/login", kakaoLoginRedirect);
 router.get("/kakao/callback", kakaoCallback);
+router.get("/me", verifyServiceAccessJWT, getMyInfo);
+
+router.patch("/me/job-category", verifyServiceAccessJWT, updateJobCategory);
 
 router.patch("/me/job-category", verifyServiceAccessJWT, updateJobCategory);
 
