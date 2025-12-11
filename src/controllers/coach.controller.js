@@ -4,9 +4,8 @@ import {
     getCompanyListService,
     findJobCategoryService,
     getQuestionsByJobCategoryService,
-    recommendAIQuestionService,
+    recommendAIQuestionsService,
     coachFeedbackService,
-    saveFeedbackService
 } from "../services/coach.service.js";
 import { resolveQuestionText } from "../utils/questionSourceResolver.js";
 
@@ -103,25 +102,36 @@ export const getQuestionsByJobCategory = async (req, res) => {
     }
 };
 
-export const recommendAIQuestion = async (req, res) => {
+export const recommendAIQuestions = async (req, res) => {
     try {
-        const { modal_input_question } = req.body;
+        const { job_family, job, company } = req.body;
 
-        if (!modal_input_question) {
-        return res.error({
-            status: 400,
-            errorCode: "MODAL_QUESTION_REQUIRED",
-            reason: "추천 질문 생성을 위해 MODAL_QUESTION이 필요합니다."
-        });
+        if (!job_family || !job || !company) {
+            return res.error({
+                status: 400,
+                errorCode: "MISSING_FIELDS",
+                reason: "job_family, job, company는 필수입니다."
+            });
         }
 
-        const question = await recommendAIQuestionService(modal_input_question);
-        return res.success({ question });
+        const questions = await recommendAIQuestionsService({
+            job_family,
+            job,
+            company
+        });
+
+        return res.success({
+            job_family,
+            job,
+            company,
+            questions
+        });
+
     } catch (err) {
         return res.error({
-        status: 500,
-        errorCode: "AI_RECOMMEND_QUESTION_FAIL",
-        reason: err.message,
+            status: 500,
+            errorCode: "INTERVIEW_GENERATION_FAIL",
+            reason: err.message
         });
     }
 };

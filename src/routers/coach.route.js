@@ -1,11 +1,10 @@
 import express from "express";
-import { verifyServiceAccessJWT } from "../middlewares/jwt.middleware.js";
 import { 
     getJobCategories,
     getJobRoles,
     getCompanyList,
     getQuestionsByJobCategory,
-    recommendAIQuestion,
+    recommendAIQuestions,
     createAndSaveFeedback
 } from "../controllers/coach.controller.js";
 
@@ -17,8 +16,8 @@ router.get("/companies", getCompanyList);
 
 router.get("/questions", getQuestionsByJobCategory);
 
-router.post("/recommend-question", recommendAIQuestion);
+router.post("/recommend-questions", recommendAIQuestions);
 
-router.post("/feedback/save", verifyServiceAccessJWT, createAndSaveFeedback);
+router.post("/feedback/save", createAndSaveFeedback);
 
 export default router;

@@ -1,4 +1,13 @@
-import { buildKakaoLoginURL, getKakaoToken, getKakaoUserInfo, loginWithKakao, issueAccessToken ,rotateRefreshToken, logoutUser } from "../services/auth.service.js";
+import { buildKakaoLoginURL,
+    getKakaoToken,
+    getKakaoUserInfo, 
+    loginWithKakao,
+    getMyInfoService,
+    updateJobCategoryService,
+    issueAccessToken,
+    rotateRefreshToken,
+    logoutUser,
+} from "../services/auth.service.js";
 import { LoginRequiredError } from "../errors.js";
 
 export const kakaoLoginRedirect = (req, res) => {
@@ -8,24 +17,27 @@ export const kakaoLoginRedirect = (req, res) => {
 
 export const kakaoCallback = async (req, res) => {
     try {
-        const { code } = req.query;//URL에서 쿼리 파라미터 추출. 프론트 있으면 req.body로 변경 필요
+        const { code } = req.query;
 
         const kakao_accessToken = await getKakaoToken(code); //URL code를 통해 token 가져오기
         const kakaoUser = await getKakaoUserInfo(kakao_accessToken); //토큰으로 유저 정보 가져오기
         const { user, tokens } = await loginWithKakao(kakaoUser); //유저 정보 확인 or DB 저장 후 user객체 반환
 
-        return res.success({ //redirect 변환 여부 확인
-            message: "카카오 로그인 성공",
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            id: user.id,
-            job_category_id: user.job_category_id,
-            user: {
-                kakaoId: user.kakao_id,
-                nickname: user.nickname,
-                email: user.email
-            }
+        res.cookie("accessToken", tokens.accessToken, {
+            httpOnly: true,
+            secure: false,  // localhost는 false, 배포환경은 true
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 30, // 30분
         });
+
+        res.cookie("refreshToken", tokens.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
+        });
+
+        return res.redirect(process.env.CLIENT_SUCCESS_REDIRECT);
     } catch (err) {
         if (err instanceof LoginRequiredError) {
         return res.error({
@@ -36,11 +48,53 @@ export const kakaoCallback = async (req, res) => {
         });
         }
 
-        //일반 에러
         return res.error({
         status: 500,
         errorCode: "SERVER_ERROR",
         reason: err.message,
+        });
+    }
+};
+
+export const getMyInfo = async (req, res) => {
+    try {
+        const user = await getMyInfoService(req.user.id);
+
+        return res.success({
+            id: user.id,
+            email: user.email,
+            nickname: user.nickname,
+            job_category_id: user.job_category_id,
+        });
+
+    } catch (err) {
+        return res.error({
+            status: 500,
+            reason: err.message,
+        });
+    }
+};
+
+export const updateJobCategory = async (req, res) => {
+    const userId = req.user.id;              // JWT에서 가져옴
+    const { job_category_id } = req.body;
+
+    if (!job_category_id) {
+        return res.error({
+            status: 400,
+            errorCode: "JOB_CATEGORY_REQUIRED",
+            reason: "job_category_id가 필요합니다."
+        });
+    }
+
+    try {
+        await updateJobCategoryService(userId, job_category_id);
+        return res.success({ message: "직무가 업데이트되었습니다." });
+    } catch (err) {
+        return res.error({
+            status: 500,
+            errorCode: "JOB_CATEGORY_UPDATE_FAIL",
+            reason: err.message
         });
     }
 };

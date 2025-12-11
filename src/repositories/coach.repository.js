@@ -149,102 +149,31 @@ export const getQuestionById = async (questionId) => {
     };
 };
 
-//특정 role_id와 company_id 조합이 유효한지 검사
-export const checkRoleCompanyMapRepo = async (role_id, company_id) => {
-    const [rows] = await pool.query(
-        `
-        SELECT 1 
-        FROM role_company_map
-        WHERE role_id = ? AND company_id = ?
-        LIMIT 1
-        `,
-        [role_id, company_id]
-    );
-
-    return rows.length > 0;  // true: 유효한 조합, false: 잘못된 조합
-};
-
-export const insertFeedbackRepo = async ({
-    userId,
-    job_category_id,
-    job_category_name,
-    role_id,
-    role_name,
-    company_id,
-    company_name,
-    question_id,
-    question_text,
-    answer_text,
-    ai_feedback,
-    ai_model_answer,
-}) => {
-
-    const sql = `
-        INSERT INTO coaching_session
-        (
+export const insertCoachingSessionRepo = async (data) => {
+    const query = `
+        INSERT INTO coaching_session (
             user_id,
-            job_category_id,
-            job_category_name,
-            role_id,
-            role_name,
-            company_id,
-            company_name,
+            job_category_id, job_category_name,
+            role_id, role_name,
+            company_id, company_name,
+            question_id, question_text,
             answer_text,
             ai_feedback,
-            ai_model_answer,
-            question_id,
-            question_text,
-            is_saved
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            ai_model_answer
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
-        userId,
-        job_category_id,
-        job_category_name,
-        role_id,
-        role_name,
-        company_id,
-        company_name,
-        answer_text,
-        ai_feedback,
-        ai_model_answer,
-        question_id,
-        question_text
+        data.userId,
+        data.job_category_id, data.job_category_name,
+        data.role_id, data.role_name,
+        data.company_id, data.company_name,
+        data.question_id, data.question_text,
+        data.answer_text,
+        data.ai_feedback,
+        data.ai_model_answer
     ];
 
-    const [result] = await pool.query(sql, params);
+    const [result] = await pool.query(query, params);
     return result.insertId;
-};
-
-export const checkDuplicateRepo = async ({
-    userId,
-    job_category_id,
-    role_id,
-    company_id,
-    question_id,
-    answer_text
-}) => {
-    const [rows] = await pool.query(`
-        SELECT id
-        FROM coaching_session
-        WHERE user_id = ?
-            AND job_category_id = ?
-            AND role_id = ?
-            AND company_id = ?
-            AND question_id = ?
-            AND answer_text = ?
-            AND is_saved = 1
-        LIMIT 1
-    `, [
-        userId,
-        job_category_id,
-        role_id,
-        company_id,
-        question_id,
-        answer_text
-    ]);
-
-    return rows.length > 0;
 };

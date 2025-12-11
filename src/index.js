@@ -2,9 +2,11 @@ import express from 'express';
 import reviewRouter from "./routers/review.route.js";
 import likeRouter from "./routers/like.route.js";
 import authRoutes from "./routers/auth.route.js";
-import userRouter from "./routers/user.route.js"
 import historyRouter from "./routers/history.route.js";
 import adminRoutes from "./routers/admin.route.js";
+import coachRouter from "./routers/coach.route.js";
+
+import { verifyServiceAccessJWT } from "./middlewares/jwt.middleware.js";
 
 //import { redisClient } from "./config/redis.config.js";
 
@@ -59,7 +61,7 @@ app.use("/reviews", reviewRouter);
 app.use("/reviews", likeRouter);
 
 app.use("/auth", authRoutes); //auth 경로 라우트
-app.use("/user", userRouter); //user 경로 라우트
+app.use("/coach", verifyServiceAccessJWT, coachRouter);
 app.use("/history", historyRouter);
 app.use("/admin", adminRoutes);
 

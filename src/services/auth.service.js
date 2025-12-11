@@ -1,10 +1,13 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { LoginRequiredError } from "../errors.js";
-import { userRepository } from "../repositories/user.repository.js";
+import { 
+    findByProviderId,
+    createUser,
+    findById,
+    updateJobCategoryRepo
+} from "../repositories/user.repository.js";
 import { redisClient } from "../config/redis.config.js";
-
-const DEFAULT_JOB_CATEGORY_ID = 2;
 
 //user.id로 JWT 토큰 생성
 export const generateServiceJWT = (user) => {
@@ -87,13 +90,15 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
     const email = kakaoUser.kakao_account?.email || null; //이메일
     const nickname = kakaoUser.kakao_account?.profile?.nickname || `kakao_user_${kakaoUser.id}`; //NULL 값일 때 에러 발생
 
-    const job_category_id = DEFAULT_JOB_CATEGORY_ID;
-
-    let user = await userRepository.findByProviderId(provider, kakao_id);
+    let user = await findByProviderId(provider, kakao_id);
 
     if (!user) { //기존 user 아니면 DB에 추가
-        const newId = await userRepository.createUser(provider, kakao_id, email, nickname, job_category_id);
-        user = await userRepository.findById(newId);
+        const newId = await createUser(provider,
+            kakao_id, 
+            email, 
+            nickname,
+        );
+        user = await findById(newId);
     }
 
     const tokens = generateServiceJWT(user); //tokens.accessToken, tokens.refreshToken
@@ -145,4 +150,18 @@ export const rotateRefreshToken = async (userId) => {
 export const logoutUser = async (userId) => {
     await redisClient.del(`refresh:${userId}`); //Redis의 refresh key 삭제
     return userId; //결과 반환(안해도 됨)
+};
+
+export const updateJobCategoryService = async (userId, jobCategoryId) => {
+    return updateJobCategoryRepo(userId, jobCategoryId);
+};
+
+export const getMyInfoService = async (userId) => {
+    const user = await findById(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
 };
