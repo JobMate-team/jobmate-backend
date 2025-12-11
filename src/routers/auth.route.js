@@ -16,6 +16,8 @@ router.get("/me", verifyServiceAccessJWT, getMyInfo);
 
 router.patch("/me/job-category", verifyServiceAccessJWT, updateJobCategory);
 
+router.patch("/me/job-category", verifyServiceAccessJWT, updateJobCategory);
+
 router.post("/refresh", verifyRefreshJWT, refreshRotation); //Client의 refreshtoken 비교해 access, refresh토큰 교체
 router.post("/logout", verifyServiceAccessJWT ,logoutInvalidate);
 

@@ -112,6 +112,10 @@ export const loginWithKakao = async (kakaoUser) => { //카카오 API에서 받�
     return { user, tokens };
 };
 
+export const updateJobCategoryService = async (userId, jobCategoryId) => {
+    return updateJobCategoryRepo(userId, jobCategoryId);
+};
+
 //Access Token 만료 시(issue) 발급
 export const issueAccessToken = async (userId) => {
     const newAccessToken = jwt.sign(

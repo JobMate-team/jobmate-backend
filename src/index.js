@@ -98,6 +98,8 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use("/coach", coachRouter)
+
 // 서버 시작
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
