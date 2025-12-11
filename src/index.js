@@ -15,14 +15,16 @@ import { verifyServiceAccessJWT } from "./middlewares/jwt.middleware.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+const PROD_ORIGIN = process.env.PROD_ORIGIN;
+
 const app = express();
 const port = 3000;
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://localhost:3001"
-
-];
+  "http://localhost:3001",
+  PROD_ORIGIN
+].filter(Boolean);
 
 app.use(
   cors({
