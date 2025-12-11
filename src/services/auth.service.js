@@ -126,6 +126,7 @@ export const issueAccessToken = async (userId) => {
     return newAccessToken;
 };
 
+
 //refreshToken교체
 export const rotateRefreshToken = async (userId) => {
     try {
@@ -156,9 +157,6 @@ export const logoutUser = async (userId) => {
     return userId; //결과 반환(안해도 됨)
 };
 
-export const updateJobCategoryService = async (userId, jobCategoryId) => {
-    return updateJobCategoryRepo(userId, jobCategoryId);
-};
 
 export const getMyInfoService = async (userId) => {
     const user = await findById(userId);
