@@ -17,42 +17,30 @@ export const kakaoLoginRedirect = (req, res) => {
 
 export const kakaoCallback = async (req, res) => {
     try {
-        const { code } = req.query;//URL에서 쿼리 파라미터 추출. 프론트 있으면 req.body로 변경 필요
+        const { code } = req.query;
 
-        const kakao_accessToken = await getKakaoToken(code); //URL code를 통해 token 가져오기
-        const kakaoUser = await getKakaoUserInfo(kakao_accessToken); //토큰으로 유저 정보 가져오기
-        const { user, tokens } = await loginWithKakao(kakaoUser); //유저 정보 확인 or DB 저장 후 user객체 반환
+        const kakao_accessToken = await getKakaoToken(code);
+        const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
+        const { user, tokens } = await loginWithKakao(kakaoUser);
 
-        return res.success({ //redirect 변환 여부 확인
-            message: "카카오 로그인 성공",
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            id: user.id,
-            job_category_id: user.job_category_id,
-            user: {
-                kakaoId: user.kakao_id,
-                nickname: user.nickname,
-                email: user.email
-            }
-        });
+        // 프론트 URL로 redirect 
+        const redirectURL =
+            `${process.env.KAKAO_REDIRECT_URI}?` +
+            `accessToken=${tokens.accessToken}` +
+            `&refreshToken=${tokens.refreshToken}` +
+            `&userId=${user.id}`;
+
+        return res.redirect(redirectURL);
+
     } catch (err) {
-        if (err instanceof LoginRequiredError) {
         return res.error({
-            status: 401,
-            errorCode: err.errorCode,
-            reason: err.reason,
-            data: err.data,
-        });
-        }
-
-        //일반 에러
-        return res.error({
-        status: 500,
-        errorCode: "SERVER_ERROR",
-        reason: err.message,
+            status: 500,
+            errorCode: "SERVER_ERROR",
+            reason: err.message,
         });
     }
 };
+
 
 export const updateJobCategory = async (req, res) => {
     const userId = req.user.id;
@@ -77,6 +65,7 @@ export const updateJobCategory = async (req, res) => {
         });
     }
 };
+ develop
 
 export const refreshRotation = async (req, res) => {
     try {

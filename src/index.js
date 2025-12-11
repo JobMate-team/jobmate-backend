@@ -10,6 +10,7 @@ import coachRouter from "./routers/coach.route.js"
 
 import historyRouter from "./routers/history.route.js";
 import adminRoutes from "./routers/admin.route.js";
+import cors from "cors";
 
 
 import dotenv from "dotenv";
@@ -17,6 +18,25 @@ dotenv.config();
 
 const app = express();
 const port = 3000;
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001"
+
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS 차단: " + origin), false);
+    },
+    credentials: true,
+  })
+);
 
 app.use((req, res, next) => {
   console.log("AUTH HEADER >>>", req.headers.authorization);
