@@ -19,39 +19,42 @@ export const kakaoCallback = async (req, res) => {
     try {
         const { code } = req.query;
 
-        const kakao_accessToken = await getKakaoToken(code); //URL code를 통해 token 가져오기
-        const kakaoUser = await getKakaoUserInfo(kakao_accessToken); //토큰으로 유저 정보 가져오기
-        const { user, tokens } = await loginWithKakao(kakaoUser); //유저 정보 확인 or DB 저장 후 user객체 반환
+        const kakao_accessToken = await getKakaoToken(code);
+        const kakaoUser = await getKakaoUserInfo(kakao_accessToken);
+        const { user, tokens } = await loginWithKakao(kakaoUser);
 
+        // ---- 너의 HEAD 코드 유지: 쿠키 저장 ----
         res.cookie("accessToken", tokens.accessToken, {
             httpOnly: true,
-            secure: false,  // localhost는 false, 배포환경은 true
+            secure: false, // localhost → false, deploy → true
             sameSite: "lax",
-            maxAge: 1000 * 60 * 30, // 30분
+            maxAge: 1000 * 60 * 30,
         });
 
         res.cookie("refreshToken", tokens.refreshToken, {
             httpOnly: true,
             secure: false,
             sameSite: "lax",
-            maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
+            maxAge: 1000 * 60 * 60 * 24 * 7,
         });
 
         return res.redirect(process.env.CLIENT_SUCCESS_REDIRECT);
+
     } catch (err) {
+
         if (err instanceof LoginRequiredError) {
-        return res.error({
-            status: 401,
-            errorCode: err.errorCode,
-            reason: err.reason,
-            data: err.data,
-        });
+            return res.error({
+                status: 401,
+                errorCode: err.errorCode,
+                reason: err.reason,
+                data: err.data,
+            });
         }
 
         return res.error({
-        status: 500,
-        errorCode: "SERVER_ERROR",
-        reason: err.message,
+            status: 500,
+            errorCode: "SERVER_ERROR",
+            reason: err.message,
         });
     }
 };
