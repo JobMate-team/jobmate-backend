@@ -3,11 +3,15 @@ import reviewRouter from "./routers/review.route.js";
 import likeRouter from "./routers/like.route.js";
 import authRoutes from "./routers/auth.route.js";
 import userRouter from "./routers/user.route.js"
+
+import coachRouter from "./routers/coach.route.js"
+// 토큰 테스트용 (테스트 끝나면 지울거)
+//import authRouter from "./routers/auth-test.route.js";
+
 import historyRouter from "./routers/history.route.js";
 import adminRoutes from "./routers/admin.route.js";
 import cors from "cors";
 
-//import { redisClient } from "./config/redis.config.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -95,6 +99,8 @@ app.use((err, req, res, next) => {
     data: err.data || null
   });
 });
+
+app.use("/coach", coachRouter)
 
 // 서버 시작
 app.listen(port, () => {

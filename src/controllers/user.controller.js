@@ -1,11 +1,11 @@
-import { userRepository } from "../repositories/user.repository.js";
+import { findById } from "../repositories/user.repository.js";
 
 //JWT 검증 후 user PK(id)로 DB 조회 → 프로필 반환
 export const getUserProfile = async (req, res) => {
     try {
         const userId = req.user.id; // Middleware 리턴된 값
 
-        const user = await userRepository.findById(userId);
+        const user = await findById(userId);
 
         if (!user) {
         return res.error({
