@@ -99,22 +99,42 @@ export const updateJobCategory = async (req, res) => {
 
 
 export const refreshRotation = async (req, res) => {
-    try {
-        const userId = req.user.id;//verifyRefreshJWT 미들웨어에서 검증 끝낸 refreshToken의 id 가져옴
+  try {
+    const userId = req.user.id;
 
-        const newAccessToken = await issueAccessToken(userId);
-        const rotated = await rotateRefreshToken(userId);
+    const newAccessToken = await issueAccessToken(userId);
+    const rotated = await rotateRefreshToken(userId);
 
-        return res.success({
-            message: "Token rotation successful",
-            userId: rotated.userId, //userId는 유지
-            accessToken: newAccessToken, //accessToken 교체
-            refreshToken: rotated.refreshToken, //refreshToken 교체
-        });
-    } catch (err) {
-        return res.error({ status: 401, errorCode: "ROTATION_FAIL", reason: err.message });
-    }
+    // accessToken 쿠키 재설정
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAMESITE,
+      maxAge: 1000 * 60 * 30,
+    });
+
+    // refreshToken 쿠키 재설정
+    res.cookie("refreshToken", rotated.refreshToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAMESITE,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    return res.success({
+      message: "Token rotation successful",
+      userId,
+    });
+
+  } catch (err) {
+    return res.error({
+      status: 401,
+      errorCode: "ROTATION_FAIL",
+      reason: err.message,
+    });
+  }
 };
+
 
 export const logoutInvalidate = async (req, res) => {
   try {
