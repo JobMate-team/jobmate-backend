@@ -5,6 +5,7 @@ import {
   deleteReviewRepo,
   getReviewListRepo
 } from "../repositories/review.repository.js";
+import { removeAllLikesByReviewRepo } from "../repositories/like.repository.js";
 
 // 후기 생성
 export const createReview = async (userId, body) => {
@@ -59,6 +60,10 @@ export const deleteReview = async (userId, reviewId, isAdmin) => {
     throw new Error("본인이 작성한 후기만 삭제할 수 있습니다.");
   }
 
+  // 1. 좋아요 먼저 전체 삭제 (FK 해결)
+  await removeAllLikesByReviewRepo(reviewId);
+
+  // 2. 리뷰 삭제
   await deleteReviewRepo(reviewId);
 
   return {

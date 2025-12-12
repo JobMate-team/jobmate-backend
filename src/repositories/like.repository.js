@@ -16,10 +16,16 @@ export const addLikeRepo = async (reviewId, userId) => {
   await pool.query(sql, [reviewId, userId]);
 };
 
-// 좋아요 제거
+// 좋아요 제거 (특정 사용자)
 export const removeLikeRepo = async (reviewId, userId) => {
   const sql = `DELETE FROM review_likes WHERE review_id = ? AND user_id = ?`;
   await pool.query(sql, [reviewId, userId]);
+};
+
+// 리뷰 삭제 전용: 해당 리뷰의 좋아요 전체 삭제
+export const removeAllLikesByReviewRepo = async (reviewId) => {
+  const sql = `DELETE FROM review_likes WHERE review_id = ?`;
+  await pool.query(sql, [reviewId]);
 };
 
 // review.likes 숫자 업데이트
@@ -27,3 +33,5 @@ export const updateReviewLikeCountRepo = async (reviewId, diff) => {
   const sql = `UPDATE review SET likes = likes + ? WHERE id = ?`;
   await pool.query(sql, [diff, reviewId]);
 };
+
+
