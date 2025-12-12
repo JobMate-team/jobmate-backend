@@ -27,15 +27,15 @@ export const kakaoCallback = async (req, res) => {
 
         res.cookie("accessToken", tokens.accessToken, {
             httpOnly: true,
-            secure: false,   // 배포 시 true
-            sameSite: "lax",
+            secure: process.env.COOKIE_SECURE === "true",   // 배포 시 true
+            sameSite: process.env.COOKIE_SAMESITE,
             maxAge: 1000 * 60 * 30, // 30분
         });
 
         res.cookie("refreshToken", tokens.refreshToken, {
             httpOnly: true,
-            secure: false,   // 배포 시 true
-            sameSite: "lax",
+            secure: process.env.COOKIE_SECURE === "true",  // 배포 시 true
+            sameSite: process.env.COOKIE_SAMESITE,
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
         });
 
@@ -130,14 +130,14 @@ export const logoutInvalidate = async (req, res) => {
     // 2) 쿠키 삭제
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAMESITE,
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAMESITE,
     });
 
     // 3) 응답 반환
