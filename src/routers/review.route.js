@@ -16,8 +16,7 @@ const router = express.Router();
 router.post("/", verifyServiceAccessJWT, authRequired, setUserRole, createReviewController);
 router.patch("/:reviewId", verifyServiceAccessJWT, authRequired, setUserRole, updateReviewController);
 router.delete("/:reviewId", verifyServiceAccessJWT, authRequired, setUserRole, deleteReviewController);
-// 로그인 필요 X
-router.get("/:reviewId", getReviewController);      
-router.get("/", getReviewListController);
+router.get("/:reviewId", verifyServiceAccessJWT, getReviewController);      
+router.get("/", verifyServiceAccessJWT, getReviewListController);
 
 export default router;
