@@ -19,23 +19,29 @@ export const createReviewRepo = async (data) => {
 export const getReviewRepo = async (id, userId = null) => {
   const sql = `
     SELECT 
-      r.*,
+      r.id,
+      r.user_id,
+      r.company_name,
+      r.job_category_id,
+      r.content,
+      r.interview_tip,
+      r.likes,
+      r.created_at,
+      r.updated_at,
+
       u.nickname,
       j.name AS job_category_name,
 
-      -- 좋아요 여부
       EXISTS (
         SELECT 1 FROM review_likes 
         WHERE review_id = r.id AND user_id = ?
       ) AS liked,
 
-      -- 관리자 수정 여부 (0 = 사용자 수정, 1 = 관리자 수정)
       CASE 
         WHEN r.edited_by_admin_id IS NOT NULL THEN 1
         ELSE 0
       END AS edited_by_admin,
 
-      -- 관리자 이름(관리자가 수정한 경우)
       a.name AS edited_admin_name
 
     FROM review r
@@ -99,12 +105,23 @@ export const getReviewListRepo = async ({ sort, job_category_id, limit, offset, 
 
   const sql = `
     SELECT
-      r.id, r.company_name, r.content, r.interview_tip, r.job_category_id,
-      r.likes, r.created_at, u.nickname, j.name AS job_category_name,
+      r.id,
+      r.user_id,
+      r.company_name,
+      r.content,
+      r.interview_tip,
+      r.job_category_id,
+      r.likes,
+      r.created_at,
+
+      u.nickname,
+      j.name AS job_category_name,
+
       EXISTS (
         SELECT 1 FROM review_likes rl
         WHERE rl.review_id = r.id AND rl.user_id = ?
       ) AS liked
+
     FROM review r
     JOIN user u ON r.user_id = u.id
     JOIN job_category j ON r.job_category_id = j.id
