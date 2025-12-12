@@ -19,7 +19,7 @@ dotenv.config();
 const PROD_ORIGIN = process.env.PROD_ORIGIN;
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 const allowedOrigins = [
   "http://localhost:3000",
