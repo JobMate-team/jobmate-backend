@@ -7,10 +7,10 @@ import { buildKakaoLoginURL,
     issueAccessToken,
     rotateRefreshToken,
     logoutUser,
-
 } from "../services/auth.service.js";
 import { redisClient } from "../config/redis.config.js";
 import { LoginRequiredError } from "../errors.js";
+import { findAdminById } from "../repositories/admin.repository.js";
 
 export const kakaoLoginRedirect = (req, res) => {
     const kakaoURL = buildKakaoLoginURL(); //로그인 화면 URL
