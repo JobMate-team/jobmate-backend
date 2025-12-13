@@ -55,23 +55,46 @@ export const kakaoCallback = async (req, res) => {
 
 
 export const getMyInfo = async (req, res) => {
-    try {
-        const user = await getMyInfoService(req.user.id);
+  try {
+    const { id, role } = req.user;
 
-        return res.success({
-            id: user.id,
-            email: user.email,
-            nickname: user.nickname,
-            job_category_id: user.job_category_id,
-        });
+    // 관리자
+    if (role === "admin") {
+      const admin = await findAdminById(id);
 
-    } catch (err) {
+      if (!admin) {
         return res.error({
-            status: 500,
-            reason: err.message,
+          status: 404,
+          reason: "Admin not found",
         });
+      }
+
+      return res.success({
+        id: admin.id,
+        email: admin.email,
+        role: "admin",
+      });
     }
+
+    // 일반 사용자
+    const user = await getMyInfoService(id);
+
+    return res.success({
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      job_category_id: user.job_category_id,
+      role: "user",
+    });
+
+  } catch (err) {
+    return res.error({
+      status: 500,
+      reason: err.message,
+    });
+  }
 };
+
 
 export const updateJobCategory = async (req, res) => {
     const userId = req.user.id;              // JWT에서 가져옴
