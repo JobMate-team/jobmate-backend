@@ -79,14 +79,14 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.use("/api/reviews", reviewRouter); 
-app.use("/api/reviews", likeRouter);
+app.use("/reviews", reviewRouter); 
+app.use("/reviews", likeRouter);
 
-app.use("/api/auth", authRoutes); //auth 경로 라우트
-app.use("/api/coach", verifyServiceAccessJWT, coachRouter);
-app.use("/api/user", verifyServiceAccessJWT, userRouter);
-app.use("/api/history", historyRouter);
-app.use("/api/admin", adminRoutes);
+app.use("/auth", authRoutes); //auth 경로 라우트
+app.use("/coach", verifyServiceAccessJWT, coachRouter);
+app.use("/user", verifyServiceAccessJWT, userRouter);
+app.use("/history", historyRouter);
+app.use("/admin", adminRoutes);
 
 
 // 전역 에러 핸들러
