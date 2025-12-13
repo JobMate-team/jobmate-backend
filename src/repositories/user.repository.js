@@ -17,7 +17,22 @@ export const createUser = async (provider, kakao_id, email, nickname, job_catego
 };
 
 export const findById = async (id) => {
-    const [rows] = await pool.query("SELECT * FROM user WHERE id = ?", [id]);
+    const sql = `
+      SELECT
+        u.id,
+        u.kakao_id,
+        u.nickname,
+        u.email,
+        u.provider,
+        u.job_category_id,
+        jc.name AS job_category_name
+      FROM user u
+      LEFT JOIN job_category jc
+        ON u.job_category_id = jc.id
+      WHERE u.id = ?
+    `;
+
+    const [rows] = await pool.query(sql, [id]);
     return rows[0] || null;
 };
 

@@ -7,8 +7,15 @@ export const getMyProfileService = async (userId) => {
 
     return {
         id: user.id,
-        email: user.email,      
+        email: user.email,
         nickname: user.nickname,
+        provider: user.provider,
+        jobCategory: user.job_category_id
+          ? {
+              id: user.job_category_id,
+              name: user.job_category_name,
+            }
+          : null,
     };
 };
 
